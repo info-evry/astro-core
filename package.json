@@ -17,5 +17,5 @@
     "type": "git",
     "url": "https://github.com/info-evry/astro-core.git"
   },
-  "license": "MIT"
+  "license": "AGPL-3.0-only"
 }
