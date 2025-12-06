@@ -1,0 +1,21 @@
+{
+  "name": "astro-core",
+  "version": "1.0.0",
+  "description": "Shared JavaScript utilities for Astro projects (Cloudflare Workers)",
+  "type": "module",
+  "exports": {
+    "./router": "./src/lib/router.js"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "vitest": "^2.1.9"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/info-evry/astro-core.git"
+  },
+  "license": "MIT"
+}
