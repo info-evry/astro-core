@@ -4,7 +4,9 @@
   "description": "Shared JavaScript utilities for Astro projects (Cloudflare Workers)",
   "type": "module",
   "exports": {
-    "./router": "./src/lib/router.js"
+    "./router": "./src/lib/router.js",
+    "./validation": "./src/lib/validation.js",
+    "./formatting": "./src/lib/formatting.js"
   },
   "scripts": {
     "test": "vitest run",

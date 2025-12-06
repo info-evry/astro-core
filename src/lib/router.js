@@ -163,3 +163,19 @@ export function handleCors(origin) {
     headers: corsHeaders(origin)
   });
 }
+
+/**
+ * CSV response helper for file downloads
+ * @param {string} content - CSV content
+ * @param {string} filename - Download filename
+ * @param {object} headers - Additional headers to include
+ */
+export function csv(content, filename, headers = {}) {
+  return new Response(content, {
+    headers: {
+      'Content-Type': 'text/csv; charset=utf-8',
+      'Content-Disposition': `attachment; filename="${filename}"`,
+      ...headers
+    }
+  });
+}
