@@ -95,8 +95,8 @@ export class Router {
         }
       }
       return error('Not Found', 404); // No route matched
-    } catch (err) {
-      console.error('Router error:', err);
+    } catch (error_) {
+      console.error('Router error:', error_);
       return error('Internal Server Error', 500);
     }
   }
