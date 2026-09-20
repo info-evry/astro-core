@@ -34,6 +34,9 @@ The package exports via package.json exports field:
 ```javascript
 // Import router and helpers
 import { Router, json, error, success, corsHeaders, handleCors } from 'astro-core/router';
+
+// Import rate limiting middleware
+import { createRateLimiter, pathPrefix, pathPattern, getClientIp, checkRateLimit } from 'astro-core/ratelimit';
 ```
 
 ## Router Usage
@@ -58,6 +61,19 @@ export default {
   }
 };
 ```
+
+## Router Middleware
+
+Register middleware with `router.use(fn)`. Middlewares run in registration order,
+after the base path has been stripped, before route matching. Return a `Response`
+to short-circuit; return `undefined`/`null` to continue.
+
+## Rate Limiting
+
+`src/lib/ratelimit.js` exports `createRateLimiter({ binding, rules, prefix })`, a
+fixed-window rate limiter (KV-backed) usable as router middleware via `router.use()`.
+See `src/lib/ratelimit.js` and `test/ratelimit.test.js` for the full API
+(`getClientIp`, `checkRateLimit`, `pathPrefix`, `pathPattern`).
 
 ## Making Changes
 

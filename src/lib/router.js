@@ -11,9 +11,24 @@ const MAX_BODY_SIZE = 1 * 1024 * 1024;
 export class Router {
   constructor(basePath = '', options = {}) {
     this.routes = [];
+    this.middlewares = [];
     // Normalize base path (remove trailing slash)
     this.basePath = basePath.replace(/\/$/, '');
     this.maxBodySize = options.maxBodySize || MAX_BODY_SIZE;
+  }
+
+  /**
+   * Register a middleware function that runs before route matching.
+   * Middlewares run in registration order, after the base path has been
+   * stripped from the request path. A middleware can short-circuit the
+   * request by returning a Response; returning a falsy value (undefined,
+   * null) passes control to the next middleware / route.
+   * @param {(request: Request, env: object, ctx: object, path: string) => (Response|Promise<Response|void>|void)} fn
+   * @returns {Router} this, for chaining
+   */
+  use(fn) {
+    this.middlewares.push(fn);
+    return this;
   }
 
   /**
@@ -62,6 +77,8 @@ export class Router {
 
   /**
    * Handle an incoming request
+   * Runs registered middlewares (in order, after base path stripping) and
+   * then matches against registered routes.
    * @param {Request} request - Incoming request
    * @param {object} env - Cloudflare Workers environment
    * @param {object} ctx - Execution context
@@ -86,19 +103,43 @@ export class Router {
         path = path.slice(this.basePath.length) || '/';
       }
 
-      for (const route of this.routes) {
-        if (route.method !== method && route.method !== 'ALL') continue;
-        const match = path.match(route.pattern);
-        if (match) {
-          const params = match.groups || {};
-          return await route.handler(request, env, ctx, params);
-        }
-      }
-      return error('Not Found', 404); // No route matched
+      // Run middlewares in registration order; any of them can
+      // short-circuit the request by returning a Response.
+      const middlewareResponse = await this.runMiddlewares(request, env, ctx, path);
+      if (middlewareResponse) return middlewareResponse;
+
+      return await this.dispatchRoute(request, env, ctx, method, path);
     } catch (error_) {
       console.error('Router error:', error_);
       return error('Internal Server Error', 500);
     }
+  }
+
+  /**
+   * Run registered middlewares in order until one returns a truthy value.
+   * @returns {Promise<Response|undefined>}
+   */
+  async runMiddlewares(request, env, ctx, path) {
+    for (const mw of this.middlewares) {
+      const res = await mw(request, env, ctx, path);
+      if (res) return res;
+    }
+  }
+
+  /**
+   * Match the request against registered routes and invoke the handler.
+   * @returns {Promise<Response>}
+   */
+  async dispatchRoute(request, env, ctx, method, path) {
+    for (const route of this.routes) {
+      if (route.method !== method && route.method !== 'ALL') continue;
+      const match = path.match(route.pattern);
+      if (match) {
+        const params = match.groups || {};
+        return await route.handler(request, env, ctx, params);
+      }
+    }
+    return error('Not Found', 404); // No route matched
   }
 }
 

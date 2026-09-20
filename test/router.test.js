@@ -180,6 +180,81 @@ describe('Router', () => {
       consoleSpy.mockRestore();
     });
 
+    it('should run middleware before routes', async () => {
+      const calls = [];
+      router.use(() => { calls.push('middleware'); });
+      router.get('/test', () => { calls.push('route'); return json({ ok: true }); });
+
+      const request = new Request('http://localhost/test');
+      await router.handle(request, {}, {});
+
+      expect(calls).toEqual(['middleware', 'route']);
+    });
+
+    it('should short-circuit when middleware returns a Response', async () => {
+      const handler = vi.fn(() => json({ ok: true }));
+      router.use(() => error('Blocked', 403));
+      router.get('/test', handler);
+
+      const request = new Request('http://localhost/test');
+      const response = await router.handle(request, {}, {});
+
+      expect(response.status).toBe(403);
+      expect(handler).not.toHaveBeenCalled();
+    });
+
+    it('should pass through when middleware returns undefined or null', async () => {
+      const handler = vi.fn(() => json({ ok: true }));
+      router.use(() => {});
+      router.use(() => null);
+      router.get('/test', handler);
+
+      const request = new Request('http://localhost/test');
+      const response = await router.handle(request, {}, {});
+
+      expect(handler).toHaveBeenCalled();
+      expect(response.status).toBe(200);
+    });
+
+    it('should run middlewares in registration order', async () => {
+      const order = [];
+      router.use(() => { order.push(1); });
+      router.use(() => { order.push(2); });
+      router.use(() => { order.push(3); });
+      router.get('/test', () => json({ ok: true }));
+
+      const request = new Request('http://localhost/test');
+      await router.handle(request, {}, {});
+
+      expect(order).toEqual([1, 2, 3]);
+    });
+
+    it('should give middleware the stripped path', async () => {
+      const r = new Router('/api');
+      let capturedPath;
+      r.use((request, env, ctx, path) => { capturedPath = path; });
+      r.get('/test', () => json({ ok: true }));
+
+      const request = new Request('http://localhost/api/test');
+      await r.handle(request, {}, {});
+
+      expect(capturedPath).toBe('/test');
+    });
+
+    it('should return 500 when a middleware throws', async () => {
+      router.use(() => {
+        throw new Error('Middleware error');
+      });
+      router.get('/test', () => json({ ok: true }));
+
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const request = new Request('http://localhost/test');
+      const response = await router.handle(request, {}, {});
+
+      expect(response.status).toBe(500);
+      consoleSpy.mockRestore();
+    });
+
     it('should match ALL method for any HTTP method', async () => {
       const handler = vi.fn(() => json({ ok: true }));
       router.all('/any', handler);

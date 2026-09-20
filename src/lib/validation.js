@@ -65,6 +65,31 @@ export function isDeadlinePassed(deadline, now = new Date()) {
 }
 
 /**
+ * Clamp a string value to a maximum length, trimming whitespace first.
+ * Alias-style helper kept distinct from `sanitizeString` for call sites
+ * that only need clamping semantics without implying full sanitization.
+ * @param {*} value - Value to clamp
+ * @param {number} max - Maximum length (default: 256)
+ * @returns {string} Trimmed and length-clamped string, or '' for non-strings
+ */
+export function clampString(value, max = 256) {
+  if (typeof value !== 'string') return '';
+  return value.trim().slice(0, Math.max(0, max));
+}
+
+/**
+ * Check if a value is one of an allowed set of values (strict equality)
+ * @param {*} value - Value to check
+ * @param {Array|Set} allowed - Allowed values
+ * @returns {boolean} True if value is in allowed
+ */
+export function isOneOf(value, allowed) {
+  if (allowed instanceof Set) return allowed.has(value);
+  if (Array.isArray(allowed)) return allowed.includes(value);
+  return false;
+}
+
+/**
  * Check if time is after cutoff (HH:MM format)
  * @param {string} cutoffTime - Cutoff time in HH:MM format
  * @param {Date} now - Current time (optional, for testing)

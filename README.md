@@ -76,6 +76,53 @@ corsHeaders('https://example.com');
 handleCors(request, 'https://example.com');
 ```
 
+### Router Middleware
+
+Register middleware with `router.use(fn)`. Middlewares run in registration
+order, after the base path has been stripped from the request path, and
+before route matching. A middleware can short-circuit the request by
+returning a `Response`; returning `undefined`/`null` passes control to the
+next middleware (or the matched route).
+
+```javascript
+import { Router, json } from './core/src/lib/router.js';
+
+const router = new Router();
+
+router.use(async (request, env, ctx, path) => {
+  console.log(`${request.method} ${path}`);
+  // return a Response here to short-circuit the request
+});
+
+router.get('/api/items', () => json({ items: [] }));
+```
+
+### Rate Limiting
+
+`astro-core/ratelimit` provides a fixed-window rate limiter backed by a
+Cloudflare KV namespace, wired in as router middleware.
+
+```javascript
+import { Router } from './core/src/lib/router.js';
+import { createRateLimiter, pathPrefix } from './core/src/lib/ratelimit.js';
+
+const router = new Router();
+
+router.use(createRateLimiter({
+  binding: 'RATE_LIMIT', // env.RATE_LIMIT KV namespace
+  rules: [
+    { name: 'login', methods: ['POST'], match: pathPrefix('/api/login'), limit: 5, windowSec: 60 },
+    { name: 'api', match: pathPrefix('/api'), limit: 100, windowSec: 60 }
+  ]
+}));
+```
+
+Only the first matching rule (checked in order, with an optional `methods`
+filter) applies. Exceeding the limit returns a `429` JSON response with
+`Retry-After`, `X-RateLimit-Limit`, and `X-RateLimit-Remaining` headers. If
+the KV binding is missing or KV access fails, requests are allowed through
+and a warning is logged.
+
 ### Router Features
 
 - **Type Checking**: Validates route patterns and parameter types
@@ -98,6 +145,7 @@ handleCors(request, 'https://example.com');
 | `options(pattern, handler)` | Register OPTIONS route |
 | `head(pattern, handler)` | Register HEAD route |
 | `all(pattern, handler)` | Register route for all methods |
+| `use(fn)` | Register a middleware run before route matching |
 | `handle(request, env)` | Route request to matching handler |
 
 ### Handler Context

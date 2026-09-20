@@ -4,7 +4,9 @@ import {
   sanitizeString,
   parseInteger,
   isDeadlinePassed,
-  isAfterCutoff
+  isAfterCutoff,
+  clampString,
+  isOneOf
 } from '../src/lib/validation.js';
 
 describe('isValidEmail', () => {
@@ -132,5 +134,49 @@ describe('isAfterCutoff', () => {
   it('returns false for invalid time format', () => {
     expect(isAfterCutoff('invalid')).toBe(false);
     expect(isAfterCutoff('25:00')).toBe(false);
+  });
+});
+
+describe('clampString', () => {
+  it('trims whitespace', () => {
+    expect(clampString('  hello  ')).toBe('hello');
+  });
+
+  it('limits length', () => {
+    expect(clampString('hello world', 5)).toBe('hello');
+  });
+
+  it('handles non-strings', () => {
+    expect(clampString(null)).toBe('');
+    expect(clampString(undefined)).toBe('');
+    expect(clampString(123)).toBe('');
+  });
+
+  it('uses default max length of 256', () => {
+    const longString = 'a'.repeat(300);
+    expect(clampString(longString).length).toBe(256);
+  });
+});
+
+describe('isOneOf', () => {
+  it('returns true when value is in an allowed array', () => {
+    expect(isOneOf('b', ['a', 'b', 'c'])).toBe(true);
+  });
+
+  it('returns false when value is not in an allowed array', () => {
+    expect(isOneOf('d', ['a', 'b', 'c'])).toBe(false);
+  });
+
+  it('returns true when value is in an allowed Set', () => {
+    expect(isOneOf('b', new Set(['a', 'b', 'c']))).toBe(true);
+  });
+
+  it('returns false when value is not in an allowed Set', () => {
+    expect(isOneOf('d', new Set(['a', 'b', 'c']))).toBe(false);
+  });
+
+  it('uses strict equality', () => {
+    expect(isOneOf(1, ['1', '2'])).toBe(false);
+    expect(isOneOf('1', [1, 2])).toBe(false);
   });
 });

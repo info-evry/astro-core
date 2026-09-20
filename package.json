@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     "./router": "./src/lib/router.js",
+    "./ratelimit": "./src/lib/ratelimit.js",
     "./validation": "./src/lib/validation.js",
     "./formatting": "./src/lib/formatting.js"
   },
