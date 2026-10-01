@@ -13,7 +13,7 @@ describe('escapeHtml', () => {
     expect(escapeHtml('<script>')).toBe('&lt;script&gt;');
     expect(escapeHtml('a & b')).toBe('a &amp; b');
     expect(escapeHtml('"quoted"')).toBe('&quot;quoted&quot;');
-    expect(escapeHtml("'single'")).toBe('&#039;single&#039;');
+    expect(escapeHtml("'single'")).toBe('&#39;single&#39;');
   });
 
   it('handles empty/null input', () => {
@@ -62,6 +62,8 @@ describe('formatCurrency', () => {
   it('handles invalid input', () => {
     expect(formatCurrency('abc')).toBe('0,00 €');
     expect(formatCurrency(NaN)).toBe('0,00 €');
+    expect(formatCurrency(Infinity)).toBe('0,00 €');
+    expect(formatCurrency(-Infinity)).toBe('0,00 €');
   });
 
   it('supports custom locale and currency', () => {

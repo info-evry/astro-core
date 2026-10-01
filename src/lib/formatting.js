@@ -1,10 +1,14 @@
 /**
  * Shared formatting utilities
  * Works in both browser and server environments
+ *
+ * These are the canonical implementations: astro-design (and the sites)
+ * re-export them from `astro-core/formatting` instead of keeping copies.
  */
 
 /**
- * Escape HTML entities to prevent XSS
+ * Escape HTML entities to prevent XSS. Escapes & < > " and ' (as `&#39;`, the
+ * canonical entity). Safe for element content and quoted attribute values.
  * @param {string} str - String to escape
  * @returns {string} Escaped string
  */
@@ -15,7 +19,7 @@ export function escapeHtml(str) {
     .replaceAll('<', '&lt;')
     .replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#039;');
+    .replaceAll("'", '&#39;');
 }
 
 /**
@@ -30,14 +34,15 @@ export function truncateText(str, maxLength = 40) {
 }
 
 /**
- * Format currency in cents to display format
+ * Format currency in cents to display format. Non-numeric, NaN and infinite
+ * input yields the fixed fallback '0,00 €' rather than "NaN €" or "∞ €".
  * @param {number} cents - Amount in cents
  * @param {string} locale - Locale for formatting (default: 'fr-FR')
  * @param {string} currency - Currency code (default: 'EUR')
  * @returns {string} Formatted currency string
  */
 export function formatCurrency(cents, locale = 'fr-FR', currency = 'EUR') {
-  if (typeof cents !== 'number' || Number.isNaN(cents)) return '0,00 €';
+  if (typeof cents !== 'number' || !Number.isFinite(cents)) return '0,00 €';
   return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency

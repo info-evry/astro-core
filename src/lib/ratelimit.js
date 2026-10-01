@@ -71,13 +71,29 @@ export async function checkRateLimit(kv, key, limit, windowSec, now = Date.now()
 }
 
 /**
- * Path matcher helper: matches any path starting with the given prefix.
+ * Path matcher helper: matches the prefix itself and anything below it, on a
+ * path-segment boundary. `pathPrefix('/api/register')` matches `/api/register`
+ * and `/api/register/x` but NOT `/api/registerX`. A prefix ending in `/`
+ * (`/api/admin/`) matches everything below it, but not `/api/admin` itself.
  * @param {string} prefix
  * @returns {(path: string) => boolean}
  */
 export function pathPrefix(prefix) {
-  return (path) => path.startsWith(prefix);
+  if (prefix.endsWith('/')) return (path) => path.startsWith(prefix);
+  return (path) => path === prefix || path.startsWith(`${prefix}/`);
 }
+
+/**
+ * Standard rate limit rule for admin endpoints: 60 requests per minute per IP
+ * under `/api/admin/`. Spread it into a rules list (`[ADMIN_RATE_LIMIT, ...]`).
+ * @type {RateLimitRule}
+ */
+export const ADMIN_RATE_LIMIT = Object.freeze({
+  name: 'admin',
+  match: pathPrefix('/api/admin/'),
+  limit: 60,
+  windowSec: 60
+});
 
 /**
  * Path matcher helper: matches any path against a regular expression.
@@ -132,7 +148,7 @@ export function createRateLimiter({ binding = 'RATE_LIMIT', rules, prefix = 'rl'
     if (!result.allowed) {
       const retryAfter = Math.max(0, Math.ceil((result.resetAt - Date.now()) / 1000));
       return json(
-        { error: 'Too many requests' },
+        { error: 'Too many requests', code: 'too_many_requests' },
         429,
         {
           'Retry-After': String(retryAfter),

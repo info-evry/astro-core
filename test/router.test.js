@@ -3,6 +3,7 @@ import {
   Router,
   json,
   error,
+  csv,
   success,
   corsHeaders,
   handleCors
@@ -344,5 +345,58 @@ describe('CORS helpers', () => {
       expect(response.status).toBe(204);
       expect(response.headers.get('Access-Control-Allow-Origin')).toBe('https://example.com');
     });
+  });
+});
+
+describe('base path', () => {
+  it('maps the bare base path to "/"', async () => {
+    const r = new Router('/api');
+    r.get('/', () => json({ root: true }));
+    const response = await r.handle(new Request('http://localhost/api'), {}, {});
+    expect(await response.json()).toEqual({ root: true });
+  });
+});
+
+describe('error codes', () => {
+  it('error() adds a code only when given', async () => {
+    expect(await error('Oops', 400).json()).toEqual({ error: 'Oops' });
+    expect(await error('Oops', 409, 'conflict').json()).toEqual({ error: 'Oops', code: 'conflict' });
+  });
+
+  it('Router answers 404 with a code', async () => {
+    const response = await new Router().handle(new Request('http://localhost/nope'), {}, {});
+    expect(response.status).toBe(404);
+    expect(await response.json()).toEqual({ error: 'Ressource introuvable', code: 'not_found' });
+  });
+
+  it('Router answers 413 with a code', async () => {
+    const r = new Router('', { maxBodySize: 2048 });
+    const request = new Request('http://localhost/x', { method: 'POST', headers: { 'Content-Length': '5000' } });
+    const response = await r.handle(request, {}, {});
+    expect(response.status).toBe(413);
+    const body = await response.json();
+    expect(body.code).toBe('payload_too_large');
+    expect(body.error).toContain('2 Ko');
+  });
+
+  it('Router answers 500 with a generic body that never leaks the error message', async () => {
+    const r = new Router();
+    r.get('/boom', () => {
+      throw new Error('secret database detail');
+    });
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const response = await r.handle(new Request('http://localhost/boom'), {}, {});
+    spy.mockRestore();
+    expect(response.status).toBe(500);
+    expect(await response.json()).toEqual({ error: 'Erreur interne', code: 'internal_error' });
+  });
+});
+
+describe('csv helper', () => {
+  it('delegates to csvResponse (sanitised filename, extra headers)', () => {
+    const response = csv('a,b', 'out"\r\nX-Evil: 1.csv', { 'X-Custom': '1' });
+    expect(response.headers.get('Content-Type')).toBe('text/csv; charset=utf-8');
+    expect(response.headers.get('Content-Disposition')).toBe('attachment; filename="outX-Evil: 1.csv"');
+    expect(response.headers.get('X-Custom')).toBe('1');
   });
 });

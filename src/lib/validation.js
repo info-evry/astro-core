@@ -106,3 +106,30 @@ export function isAfterCutoff(cutoffTime, now = new Date()) {
   cutoff.setHours(hours, minutes, 0, 0);
   return now >= cutoff;
 }
+
+/**
+ * Maximum lengths (in UTF-16 code units, as `String.length`) for common
+ * user-supplied fields. Shared so every site rejects the same inputs.
+ */
+export const LIMITS = Object.freeze({
+  name: 100,
+  email: 254,
+  phone: 30,
+  handle: 64,
+  studentId: 32,
+  teamName: 128,
+  description: 256,
+  teamPassword: 64,
+  text: 1000
+});
+
+/**
+ * True if `value` is a string longer than `max`. Non-strings are never "too
+ * long" (type checking is the caller's job), so `isTooLong(undefined, 5)` is false.
+ * @param {*} value
+ * @param {number} max - Maximum allowed length (see `LIMITS`)
+ * @returns {boolean}
+ */
+export function isTooLong(value, max) {
+  return typeof value === 'string' && value.length > max;
+}

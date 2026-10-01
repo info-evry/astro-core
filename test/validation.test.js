@@ -6,7 +6,9 @@ import {
   isDeadlinePassed,
   isAfterCutoff,
   clampString,
-  isOneOf
+  isOneOf,
+  LIMITS,
+  isTooLong
 } from '../src/lib/validation.js';
 
 describe('isValidEmail', () => {
@@ -178,5 +180,29 @@ describe('isOneOf', () => {
   it('uses strict equality', () => {
     expect(isOneOf(1, ['1', '2'])).toBe(false);
     expect(isOneOf('1', [1, 2])).toBe(false);
+  });
+});
+
+describe('LIMITS / isTooLong', () => {
+  it('exposes the shared field limits, frozen', () => {
+    expect(LIMITS).toEqual({
+      name: 100, email: 254, phone: 30, handle: 64, studentId: 32,
+      teamName: 128, description: 256, teamPassword: 64, text: 1000
+    });
+    expect(Object.isFrozen(LIMITS)).toBe(true);
+  });
+
+  it('flags only strings longer than the maximum', () => {
+    expect(isTooLong('a'.repeat(100), LIMITS.name)).toBe(false);
+    expect(isTooLong('a'.repeat(101), LIMITS.name)).toBe(true);
+    expect(isTooLong('', 0)).toBe(false);
+  });
+
+  it('is false for non-strings, whatever their size', () => {
+    expect(isTooLong(undefined, 1)).toBe(false);
+    expect(isTooLong(null, 1)).toBe(false);
+    expect(isTooLong(12345, 1)).toBe(false);
+    expect(isTooLong(['abc'], 1)).toBe(false);
+    expect(isTooLong({ length: 999 }, 1)).toBe(false);
   });
 });

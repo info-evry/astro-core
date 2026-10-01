@@ -8,20 +8,27 @@ Astro Core is a shared JavaScript utilities library for Cloudflare Workers, used
 
 ```
 astro-core/
-├── src/
-│   └── lib/
-│       └── router.js    # Main router implementation
-├── test/
-│   └── router.test.js   # Comprehensive tests
-├── package.json
+├── src/lib/
+│   ├── router.js ratelimit.js validation.js formatting.js   # original modules
+│   ├── http.js request.js ids.js d1.js auth.js csv.js        # shared server layer
+│   ├── settings.js api-route.js
+│   └── errors.js        # internal error catalogue (not exported)
+├── test/                # one <module>.test.js per module
+├── package.json         # `exports` map: one entry per public module
 └── vitest.config.js
 ```
+
+See README.md ("Shared server layer") for the API of the server-layer modules. Every error body is
+`{ error, code }`; 500 responses must never leak `error.message` (use `serverError`).
 
 ## Testing
 
 ```bash
 # Run tests
-bun test
+bun run test
+
+# Coverage
+bunx vitest run --coverage
 
 # Watch mode
 bun run test:watch

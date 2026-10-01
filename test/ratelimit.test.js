@@ -5,7 +5,8 @@ import {
   checkRateLimit,
   createRateLimiter,
   pathPrefix,
-  pathPattern
+  pathPattern,
+  ADMIN_RATE_LIMIT
 } from '../src/lib/ratelimit.js';
 import { Router, json } from '../src/lib/router.js';
 
@@ -104,6 +105,29 @@ describe('pathPrefix / pathPattern', () => {
     expect(matcher('/other')).toBe(false);
   });
 
+  it('pathPrefix matches only on a path-segment boundary', () => {
+    const matcher = pathPrefix('/api/register');
+    expect(matcher('/api/register')).toBe(true);
+    expect(matcher('/api/register/team')).toBe(true);
+    expect(matcher('/api/registerX')).toBe(false);
+    expect(matcher('/api/register-all')).toBe(false);
+    expect(matcher('/api')).toBe(false);
+  });
+
+  it('pathPrefix with a trailing slash matches only below the prefix', () => {
+    const matcher = pathPrefix('/api/admin/');
+    expect(matcher('/api/admin/members')).toBe(true);
+    expect(matcher('/api/admin')).toBe(false);
+    expect(matcher('/api/administrator')).toBe(false);
+  });
+
+  it('ADMIN_RATE_LIMIT is the standard admin rule', () => {
+    expect(ADMIN_RATE_LIMIT).toMatchObject({ name: 'admin', limit: 60, windowSec: 60 });
+    expect(ADMIN_RATE_LIMIT.match('/api/admin/members')).toBe(true);
+    expect(ADMIN_RATE_LIMIT.match('/api/administrator')).toBe(false);
+    expect(ADMIN_RATE_LIMIT.match('/api/register')).toBe(false);
+  });
+
   it('pathPattern matches paths against a regex', () => {
     const matcher = pathPattern(/^\/users\/\d+$/);
     expect(matcher('/users/123')).toBe(true);
@@ -157,6 +181,7 @@ describe('createRateLimiter', () => {
     expect(response.status).toBe(429);
     const body = await response.json();
     expect(body.error).toBe('Too many requests');
+    expect(body.code).toBe('too_many_requests');
     expect(response.headers.get('Retry-After')).toBeTruthy();
     expect(response.headers.get('X-RateLimit-Limit')).toBe('2');
     expect(response.headers.get('X-RateLimit-Remaining')).toBe('0');

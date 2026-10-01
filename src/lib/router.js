@@ -5,6 +5,9 @@
  * Shared module from astro-core - used by astro-ndi and astro-join
  */
 
+import { ERRORS } from './errors.js';
+import { csvResponse } from './csv.js';
+
 // Maximum request body size (1MB default)
 const MAX_BODY_SIZE = 1 * 1024 * 1024;
 
@@ -94,7 +97,7 @@ export class Router {
       if (method === 'POST' || method === 'PUT') {
         const contentLength = request.headers.get('Content-Length');
         if (contentLength && Number.parseInt(contentLength, 10) > this.maxBodySize) {
-          return error(`Request body too large. Maximum size is ${Math.round(this.maxBodySize / 1024)}KB`, 413);
+          return fail('payload_too_large', `Requête trop volumineuse (maximum ${Math.round(this.maxBodySize / 1024)} Ko)`);
         }
       }
 
@@ -111,7 +114,7 @@ export class Router {
       return await this.dispatchRoute(request, env, ctx, method, path);
     } catch (error_) {
       console.error('Router error:', error_);
-      return error('Internal Server Error', 500);
+      return fail('internal_error');
     }
   }
 
@@ -139,7 +142,7 @@ export class Router {
         return await route.handler(request, env, ctx, params);
       }
     }
-    return error('Not Found', 404); // No route matched
+    return fail('not_found'); // No route matched
   }
 }
 
@@ -163,9 +166,20 @@ export function json(data, status = 200, headers = {}) {
  * Error response helper
  * @param {string} message - Error message
  * @param {number} status - HTTP status code (default: 400)
+ * @param {string} [code] - Stable machine-readable error code. When given the
+ *   body is `{ error, code }`; when omitted it stays `{ error }` (legacy shape).
  */
-export function error(message, status = 400) {
-  return json({ error: message }, status);
+export function error(message, status = 400, code) {
+  return json(code === undefined ? { error: message } : { error: message, code }, status);
+}
+
+/**
+ * Build an error response from the shared catalogue (see errors.js).
+ * @param {import('./errors.js').ErrorCode} code
+ * @param {string} [message] - Overrides the catalogue message
+ */
+function fail(code, message) {
+  return error(message ?? ERRORS[code].message, ERRORS[code].status, code);
 }
 
 /**
@@ -206,17 +220,12 @@ export function handleCors(origin) {
 }
 
 /**
- * CSV response helper for file downloads
+ * CSV response helper for file downloads.
+ * Delegates to `csvResponse` from csv.js (the filename is sanitised there).
  * @param {string} content - CSV content
  * @param {string} filename - Download filename
  * @param {object} headers - Additional headers to include
  */
 export function csv(content, filename, headers = {}) {
-  return new Response(content, {
-    headers: {
-      'Content-Type': 'text/csv; charset=utf-8',
-      'Content-Disposition': `attachment; filename="${filename}"`,
-      ...headers
-    }
-  });
+  return csvResponse(content, filename, headers);
 }
