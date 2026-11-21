@@ -18,7 +18,7 @@ describe('parsePositiveId', () => {
   });
 
   it.each([
-    [0], [-0], [-1], [3.5], [NaN], [Infinity], [-Infinity], [1e21], [Number.MAX_SAFE_INTEGER + 1], [2 ** 53]
+    [0], [-0], [-1], [3.5], [Number.NaN], [Infinity], [-Infinity], [1e21], [Number.MAX_SAFE_INTEGER + 1], [2 ** 53]
   ])('rejects the number %s', (value) => {
     expect(parsePositiveId(value)).toBeNull();
   });
@@ -30,6 +30,7 @@ describe('parsePositiveId', () => {
 
   it('rejects non-number, non-string types', () => {
     const toStringBomb = { toString: () => '5', valueOf: () => 5 };
+    // eslint-disable-next-line sonarjs/no-primitive-wrappers, unicorn/new-for-builtins -- a boxed Number is one of the inputs under test
     for (const value of [null, undefined, true, false, [], [5], ['5'], {}, toStringBomb, 5n, Symbol('x'), () => 5, new Number(5)]) {
       expect(parsePositiveId(value)).toBeNull();
     }
@@ -68,7 +69,7 @@ describe('parseIdList', () => {
   });
 
   it('rejects the whole list when any id is invalid', () => {
-    for (const bad of [0, -1, 1.5, '12abc', null, undefined, NaN, 1e21, [], {}, true]) {
+    for (const bad of [0, -1, 1.5, '12abc', null, undefined, Number.NaN, 1e21, [], {}, true]) {
       expect(parseIdList([1, bad, 3])).toEqual({ error: 'invalid_id' });
     }
   });

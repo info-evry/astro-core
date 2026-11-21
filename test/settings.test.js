@@ -95,7 +95,7 @@ describe('isIntInRange', () => {
   });
 
   it('rejects out of range, non-integers and non-numbers', () => {
-    for (const bad of [-1, 11, 5.5, NaN, Infinity, '5', null, undefined, [5], {}, true, 1e21]) {
+    for (const bad of [-1, 11, 5.5, Number.NaN, Infinity, '5', null, undefined, [5], {}, true, 1e21]) {
       expect(inRange(bad)).toBe(false);
     }
   });
@@ -103,7 +103,7 @@ describe('isIntInRange', () => {
   it('supports negative ranges and rejects an invalid configuration', () => {
     expect(isIntInRange(-5, -1)(-3)).toBe(true);
     expect(() => isIntInRange(5, 1)).toThrow(RangeError);
-    expect(() => isIntInRange(NaN, 1)).toThrow(RangeError);
+    expect(() => isIntInRange(Number.NaN, 1)).toThrow(RangeError);
     expect(() => isIntInRange(0, Infinity)).toThrow(RangeError);
     expect(() => isIntInRange('1', 2)).toThrow(RangeError);
   });
@@ -128,8 +128,8 @@ describe('isStringArray', () => {
     expect(valid([])).toBe(true);
     expect(valid(['x'.repeat(256)])).toBe(true);
     expect(valid(['x'.repeat(257)])).toBe(false);
-    expect(valid(new Array(100).fill('a'))).toBe(true);
-    expect(valid(new Array(101).fill('a'))).toBe(false);
+    expect(valid(Array.from({length: 100}).fill('a'))).toBe(true);
+    expect(valid(Array.from({length: 101}).fill('a'))).toBe(false);
   });
 
   it('honours maxItems, maxLength and minItems', () => {
@@ -171,7 +171,7 @@ describe('isMoneyCents', () => {
   });
 
   it('rejects negatives, fractions, too large, strings and specials', () => {
-    for (const bad of [-1, 10.5, 10_001, '100', null, undefined, NaN, Infinity, 1e21, [100], {}, true]) {
+    for (const bad of [-1, 10.5, 10_001, '100', null, undefined, Number.NaN, Infinity, 1e21, [100], {}, true]) {
       expect(valid(bad)).toBe(false);
     }
   });
@@ -180,6 +180,6 @@ describe('isMoneyCents', () => {
     expect(isMoneyCents()(Number.MAX_SAFE_INTEGER)).toBe(true);
     expect(isMoneyCents()(Number.MAX_SAFE_INTEGER + 1)).toBe(false);
     expect(() => isMoneyCents(-1)).toThrow(RangeError);
-    expect(() => isMoneyCents(NaN)).toThrow(RangeError);
+    expect(() => isMoneyCents(Number.NaN)).toThrow(RangeError);
   });
 });

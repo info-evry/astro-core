@@ -85,17 +85,17 @@ describe('parseInteger', () => {
 
 describe('isDeadlinePassed', () => {
   it('returns false for future deadline', () => {
-    const future = new Date(Date.now() + 86400000);
+    const future = new Date(Date.now() + 86_400_000);
     expect(isDeadlinePassed(future)).toBe(false);
   });
 
   it('returns true for past deadline', () => {
-    const past = new Date(Date.now() - 86400000);
+    const past = new Date(Date.now() - 86_400_000);
     expect(isDeadlinePassed(past)).toBe(true);
   });
 
   it('handles string dates', () => {
-    const past = new Date(Date.now() - 86400000).toISOString();
+    const past = new Date(Date.now() - 86_400_000).toISOString();
     expect(isDeadlinePassed(past)).toBe(true);
   });
 
@@ -201,7 +201,7 @@ describe('LIMITS / isTooLong', () => {
   it('is false for non-strings, whatever their size', () => {
     expect(isTooLong(undefined, 1)).toBe(false);
     expect(isTooLong(null, 1)).toBe(false);
-    expect(isTooLong(12345, 1)).toBe(false);
+    expect(isTooLong(12_345, 1)).toBe(false);
     expect(isTooLong(['abc'], 1)).toBe(false);
     expect(isTooLong({ length: 999 }, 1)).toBe(false);
   });

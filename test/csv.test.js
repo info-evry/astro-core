@@ -187,7 +187,7 @@ describe('generateCsv', () => {
   it('supports delimiter, bom, quoteAll and eol', () => {
     const csv = generateCsv([['a;b', 'c']], { columns: ['x', 'y'], delimiter: ';', bom: true, quoteAll: true, eol: '\n' });
     expect(csv).toBe(`${CSV_BOM}"x";"y"\n"a;b";"c"`);
-    expect(csv.codePointAt(0)).toBe(0xfeff);
+    expect(csv.codePointAt(0)).toBe(0xfe_ff);
   });
 
   it('neutralises formulas in headers and cells but keeps phone numbers', () => {

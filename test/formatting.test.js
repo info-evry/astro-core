@@ -61,7 +61,7 @@ describe('formatCurrency', () => {
 
   it('handles invalid input', () => {
     expect(formatCurrency('abc')).toBe('0,00 €');
-    expect(formatCurrency(NaN)).toBe('0,00 €');
+    expect(formatCurrency(Number.NaN)).toBe('0,00 €');
     expect(formatCurrency(Infinity)).toBe('0,00 €');
     expect(formatCurrency(-Infinity)).toBe('0,00 €');
   });

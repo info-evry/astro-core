@@ -22,7 +22,7 @@
     "test:watch": "vitest"
   },
   "devDependencies": {
-    "vitest": "^4.1.11"
+    "vitest": "^4.1.12"
   },
   "repository": {
     "type": "git",

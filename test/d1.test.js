@@ -43,7 +43,7 @@ describe('chunk', () => {
     expect(input).toEqual([1, 2, 3]);
   });
 
-  it.each([0, -1, 1.5, NaN, Infinity, '2', null, undefined])('rejects size %s', (size) => {
+  it.each([0, -1, 1.5, Number.NaN, Infinity, '2', null, undefined])('rejects size %s', (size) => {
     expect(() => chunk([1, 2], size)).toThrow(RangeError);
   });
 });
@@ -56,7 +56,7 @@ describe('inClause', () => {
     expect(inClause(90).split(',')).toHaveLength(90);
   });
 
-  it.each([-1, 1.5, NaN, Infinity, '3', null])('rejects count %s', (count) => {
+  it.each([-1, 1.5, Number.NaN, Infinity, '3', null])('rejects count %s', (count) => {
     expect(() => inClause(count)).toThrow(RangeError);
   });
 });
@@ -121,7 +121,7 @@ describe('runByIds', () => {
   it('rejects a configuration that cannot fit in D1 limits, before any call', async () => {
     const db = createFakeDb();
     await expect(runByIds(db, ids(3), build, { size: 101 })).rejects.toThrow(RangeError);
-    await expect(runByIds(db, ids(3), build, { size: 90, leadingParams: new Array(11).fill(0) })).rejects.toThrow(/variable limit/);
+    await expect(runByIds(db, ids(3), build, { size: 90, leadingParams: Array.from({length: 11}).fill(0) })).rejects.toThrow(/variable limit/);
     expect(db.prepared).toHaveLength(0);
     expect(db.batches).toHaveLength(0);
   });

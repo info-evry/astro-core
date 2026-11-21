@@ -118,7 +118,7 @@ describe('readJsonObject', () => {
     expect(await readJsonObject(request, { maxBytes: 150 })).toBeNull();
   });
 
-  it.each([NaN, -1, Infinity, '10', null])('throws on an invalid maxBytes (%s)', async (maxBytes) => {
+  it.each([Number.NaN, -1, Infinity, '10', null])('throws on an invalid maxBytes (%s)', async (maxBytes) => {
     await expect(readJsonObject(post('{}'), { maxBytes })).rejects.toThrow(TypeError);
   });
 
