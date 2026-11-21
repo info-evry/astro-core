@@ -186,8 +186,15 @@ describe('isOneOf', () => {
 describe('LIMITS / isTooLong', () => {
   it('exposes the shared field limits, frozen', () => {
     expect(LIMITS).toEqual({
-      name: 100, email: 254, phone: 30, handle: 64, studentId: 32,
-      teamName: 128, description: 256, teamPassword: 64, text: 1000
+      name: 100,
+      email: 254,
+      phone: 30,
+      handle: 64,
+      studentId: 32,
+      teamName: 128,
+      description: 256,
+      teamPassword: 64,
+      text: 1000
     });
     expect(Object.isFrozen(LIMITS)).toBe(true);
   });

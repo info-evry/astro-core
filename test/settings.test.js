@@ -1,6 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import {
-  validateSettings, isBooleanLike, isIntInRange, isTimeHHMM, isStringArray, isAcademicYear, isMoneyCents
+  validateSettings,
+  isBooleanLike,
+  isIntInRange,
+  isTimeHHMM,
+  isStringArray,
+  isAcademicYear,
+  isMoneyCents
 } from '../src/lib/settings.js';
 
 const schema = {
@@ -16,7 +22,11 @@ describe('validateSettings', () => {
     const result = validateSettings({ limit: 3, membership_open: 'true', current_year: '2024-2025' }, schema);
     expect(result).toEqual({
       ok: true,
-      entries: [['limit', 3], ['membership_open', 'true'], ['current_year', '2024-2025']]
+      entries: [
+        ['limit', 3],
+        ['membership_open', 'true'],
+        ['current_year', '2024-2025']
+      ]
     });
   });
 
@@ -26,7 +36,9 @@ describe('validateSettings', () => {
 
   it('reports unknown keys', () => {
     expect(validateSettings({ limit: 3, nope: 1, other: 2 }, schema)).toEqual({
-      ok: false, unknown: ['nope', 'other'], invalid: []
+      ok: false,
+      unknown: ['nope', 'other'],
+      invalid: []
     });
   });
 
@@ -67,7 +79,14 @@ describe('validateSettings', () => {
   });
 
   it('treats a throwing validator as a rejection', () => {
-    const result = validateSettings({ a: 1 }, { a: () => { throw new Error('boom'); } });
+    const result = validateSettings(
+      { a: 1 },
+      {
+        a: () => {
+          throw new Error('boom');
+        }
+      }
+    );
     expect(result).toEqual({ ok: false, unknown: [], invalid: [{ a: 'Valeur invalide' }] });
   });
 
@@ -83,7 +102,8 @@ describe('validateSettings', () => {
 describe('isBooleanLike', () => {
   it('accepts booleans and the strings true/false only', () => {
     for (const ok of [true, false, 'true', 'false']) expect(isBooleanLike(ok)).toBe(true);
-    for (const bad of ['True', 'yes', '1', 1, 0, null, undefined, [], {}, ' true']) expect(isBooleanLike(bad)).toBe(false);
+    for (const bad of ['True', 'yes', '1', 1, 0, null, undefined, [], {}, ' true'])
+      expect(isBooleanLike(bad)).toBe(false);
   });
 });
 
@@ -115,7 +135,22 @@ describe('isTimeHHMM', () => {
   });
 
   it('rejects everything else', () => {
-    for (const bad of ['24:00', '23:60', '9:05', '09:5', '0905', '09:05:00', ' 09:05', '09:05\n', 'ab:cd', '', null, 905, [], '٠٩:٠٥']) {
+    for (const bad of [
+      '24:00',
+      '23:60',
+      '9:05',
+      '09:5',
+      '0905',
+      '09:05:00',
+      ' 09:05',
+      '09:05\n',
+      'ab:cd',
+      '',
+      null,
+      905,
+      [],
+      '٠٩:٠٥'
+    ]) {
       expect(isTimeHHMM(bad)).toBe(false);
     }
   });
@@ -128,8 +163,8 @@ describe('isStringArray', () => {
     expect(valid([])).toBe(true);
     expect(valid(['x'.repeat(256)])).toBe(true);
     expect(valid(['x'.repeat(257)])).toBe(false);
-    expect(valid(Array.from({length: 100}).fill('a'))).toBe(true);
-    expect(valid(Array.from({length: 101}).fill('a'))).toBe(false);
+    expect(valid(Array.from({ length: 100 }).fill('a'))).toBe(true);
+    expect(valid(Array.from({ length: 101 }).fill('a'))).toBe(false);
   });
 
   it('honours maxItems, maxLength and minItems', () => {
@@ -143,7 +178,19 @@ describe('isStringArray', () => {
 
   it('rejects blank strings, non-strings, holes and non-arrays', () => {
     const valid = isStringArray();
-    for (const bad of [[''], ['  '], ['a', 1], ['a', null], [['a']], [{}], 'a', null, undefined, { length: 1, 0: 'a' }, new Set(['a'])]) {
+    for (const bad of [
+      [''],
+      ['  '],
+      ['a', 1],
+      ['a', null],
+      [['a']],
+      [{}],
+      'a',
+      null,
+      undefined,
+      { length: 1, 0: 'a' },
+      new Set(['a'])
+    ]) {
       expect(valid(bad)).toBe(false);
     }
     // eslint-disable-next-line no-sparse-arrays
@@ -157,7 +204,21 @@ describe('isAcademicYear', () => {
   });
 
   it('rejects non-consecutive, malformed and non-string values', () => {
-    for (const bad of ['2024-2026', '2024-2024', '2025-2024', '24-25', '2024/2025', '2024-2025 ', ' 2024-2025', '20244-2025', '', null, 2024, [], '2024–2025']) {
+    for (const bad of [
+      '2024-2026',
+      '2024-2024',
+      '2025-2024',
+      '24-25',
+      '2024/2025',
+      '2024-2025 ',
+      ' 2024-2025',
+      '20244-2025',
+      '',
+      null,
+      2024,
+      [],
+      '2024–2025'
+    ]) {
       expect(isAcademicYear(bad)).toBe(false);
     }
   });

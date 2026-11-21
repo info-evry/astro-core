@@ -7,7 +7,14 @@ function createFakeDb({ changesPerStatement = (statement) => statement.params.le
     batches: [],
     prepared: [],
     prepare(sql) {
-      const statement = { sql, params: [], bind(...params) { statement.params = params; return statement; } };
+      const statement = {
+        sql,
+        params: [],
+        bind(...params) {
+          statement.params = params;
+          return statement;
+        }
+      };
       db.prepared.push(statement);
       return statement;
     },
@@ -32,7 +39,10 @@ describe('constants', () => {
 describe('chunk', () => {
   it('splits into consecutive chunks', () => {
     expect(chunk([1, 2, 3, 4, 5], 2)).toEqual([[1, 2], [3, 4], [5]]);
-    expect(chunk([1, 2, 3, 4], 2)).toEqual([[1, 2], [3, 4]]);
+    expect(chunk([1, 2, 3, 4], 2)).toEqual([
+      [1, 2],
+      [3, 4]
+    ]);
     expect(chunk([1], 5)).toEqual([[1]]);
     expect(chunk([], 3)).toEqual([]);
   });
@@ -114,21 +124,31 @@ describe('runByIds', () => {
 
   it('sums meta.changes and tolerates missing meta', async () => {
     const db = createFakeDb();
-    db.batch = async () => [{ meta: { changes: 5 } }, { meta: {} }, {}, { meta: { changes: 'x' } }, { meta: { changes: 2 } }];
+    db.batch = async () => [
+      { meta: { changes: 5 } },
+      { meta: {} },
+      {},
+      { meta: { changes: 'x' } },
+      { meta: { changes: 2 } }
+    ];
     expect(await runByIds(db, ids(450), build)).toBe(7);
   });
 
   it('rejects a configuration that cannot fit in D1 limits, before any call', async () => {
     const db = createFakeDb();
     await expect(runByIds(db, ids(3), build, { size: 101 })).rejects.toThrow(RangeError);
-    await expect(runByIds(db, ids(3), build, { size: 90, leadingParams: Array.from({length: 11}).fill(0) })).rejects.toThrow(/variable limit/);
+    await expect(
+      runByIds(db, ids(3), build, { size: 90, leadingParams: Array.from({ length: 11 }).fill(0) })
+    ).rejects.toThrow(/variable limit/);
     expect(db.prepared).toHaveLength(0);
     expect(db.batches).toHaveLength(0);
   });
 
   it('propagates batch failures (atomic batch is all-or-nothing)', async () => {
     const db = createFakeDb();
-    db.batch = async () => { throw new Error('D1 down'); };
+    db.batch = async () => {
+      throw new Error('D1 down');
+    };
     await expect(runByIds(db, ids(200), build)).rejects.toThrow('D1 down');
   });
 });

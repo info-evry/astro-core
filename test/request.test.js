@@ -1,7 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  readJsonObject, readJsonOrRespond, isUniqueConstraintError, isForeignKeyError
-} from '../src/lib/request.js';
+import { readJsonObject, readJsonOrRespond, isUniqueConstraintError, isForeignKeyError } from '../src/lib/request.js';
 
 const post = (body, headers = {}) => new Request('http://localhost/x', { method: 'POST', body, headers });
 
@@ -111,8 +109,12 @@ describe('readJsonObject', () => {
 
   it('copes with a stream whose cancel() rejects', async () => {
     const stream = new ReadableStream({
-      pull(controller) { controller.enqueue(new Uint8Array(100)); },
-      cancel() { throw new Error('nope'); }
+      pull(controller) {
+        controller.enqueue(new Uint8Array(100));
+      },
+      cancel() {
+        throw new Error('nope');
+      }
     });
     const request = new Request('http://localhost/x', { method: 'POST', body: stream, duplex: 'half' });
     expect(await readJsonObject(request, { maxBytes: 150 })).toBeNull();

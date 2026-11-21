@@ -1,7 +1,16 @@
 import { describe, it, expect, vi } from 'vitest';
 import {
-  badRequest, invalidBody, invalidId, unauthorized, forbidden, notFound,
-  conflict, tooLarge, tooManyRequests, serverError, okJson
+  badRequest,
+  invalidBody,
+  invalidId,
+  unauthorized,
+  forbidden,
+  notFound,
+  conflict,
+  tooLarge,
+  tooManyRequests,
+  serverError,
+  okJson
 } from '../src/lib/http.js';
 
 async function parts(response) {
@@ -24,14 +33,15 @@ describe('error helpers', () => {
     expect(result).toEqual({ status, body: { error: message, code }, type: 'application/json' });
   });
 
-  it.each([
-    badRequest, invalidBody, invalidId, unauthorized, forbidden, notFound, conflict, tooLarge, tooManyRequests
-  ])('%o accepts an override message and keeps the code', async (helper) => {
-    const plain = await parts(helper());
-    const custom = await parts(helper('Message perso'));
-    expect(custom.body).toEqual({ error: 'Message perso', code: plain.body.code });
-    expect(custom.status).toBe(plain.status);
-  });
+  it.each([badRequest, invalidBody, invalidId, unauthorized, forbidden, notFound, conflict, tooLarge, tooManyRequests])(
+    '%o accepts an override message and keeps the code',
+    async (helper) => {
+      const plain = await parts(helper());
+      const custom = await parts(helper('Message perso'));
+      expect(custom.body).toEqual({ error: 'Message perso', code: plain.body.code });
+      expect(custom.status).toBe(plain.status);
+    }
+  );
 
   it('ignores an empty or non-string override and uses the default', async () => {
     expect((await parts(notFound(''))).body.error).toBe('Ressource introuvable');
@@ -72,7 +82,9 @@ describe('serverError', () => {
 describe('okJson', () => {
   it('answers 200 JSON with the data as-is', async () => {
     expect(await parts(okJson({ a: 1, list: [1, 2] }))).toEqual({
-      status: 200, body: { a: 1, list: [1, 2] }, type: 'application/json'
+      status: 200,
+      body: { a: 1, list: [1, 2] },
+      type: 'application/json'
     });
   });
 });

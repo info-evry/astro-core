@@ -72,11 +72,21 @@ export class Router {
       .replaceAll(/:(\w+)/g, '(?<$1>[^/]+)');
   }
 
-  get(path, handler) { return this.add('GET', path, handler); }
-  post(path, handler) { return this.add('POST', path, handler); }
-  put(path, handler) { return this.add('PUT', path, handler); }
-  delete(path, handler) { return this.add('DELETE', path, handler); }
-  all(path, handler) { return this.add('ALL', path, handler); }
+  get(path, handler) {
+    return this.add('GET', path, handler);
+  }
+  post(path, handler) {
+    return this.add('POST', path, handler);
+  }
+  put(path, handler) {
+    return this.add('PUT', path, handler);
+  }
+  delete(path, handler) {
+    return this.add('DELETE', path, handler);
+  }
+  all(path, handler) {
+    return this.add('ALL', path, handler);
+  }
 
   /**
    * Handle an incoming request
@@ -97,7 +107,10 @@ export class Router {
       if (method === 'POST' || method === 'PUT') {
         const contentLength = request.headers.get('Content-Length');
         if (contentLength && Number.parseInt(contentLength, 10) > this.maxBodySize) {
-          return fail('payload_too_large', `Requête trop volumineuse (maximum ${Math.round(this.maxBodySize / 1024)} Ko)`);
+          return fail(
+            'payload_too_large',
+            `Requête trop volumineuse (maximum ${Math.round(this.maxBodySize / 1024)} Ko)`
+          );
         }
       }
 
@@ -198,7 +211,7 @@ export function success(message, data = {}) {
  */
 export function corsHeaders(origin) {
   if (!origin) {
-    throw new Error("corsHeaders: origin must be explicitly specified for security");
+    throw new Error('corsHeaders: origin must be explicitly specified for security');
   }
   return {
     'Access-Control-Allow-Origin': origin,

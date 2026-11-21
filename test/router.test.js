@@ -1,13 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import {
-  Router,
-  json,
-  error,
-  csv,
-  success,
-  corsHeaders,
-  handleCors
-} from '../src/lib/router.js';
+import { Router, json, error, csv, success, corsHeaders, handleCors } from '../src/lib/router.js';
 
 describe('Router', () => {
   let router;
@@ -183,8 +175,13 @@ describe('Router', () => {
 
     it('should run middleware before routes', async () => {
       const calls = [];
-      router.use(() => { calls.push('middleware'); });
-      router.get('/test', () => { calls.push('route'); return json({ ok: true }); });
+      router.use(() => {
+        calls.push('middleware');
+      });
+      router.get('/test', () => {
+        calls.push('route');
+        return json({ ok: true });
+      });
 
       const request = new Request('http://localhost/test');
       await router.handle(request, {}, {});
@@ -219,9 +216,15 @@ describe('Router', () => {
 
     it('should run middlewares in registration order', async () => {
       const order = [];
-      router.use(() => { order.push(1); });
-      router.use(() => { order.push(2); });
-      router.use(() => { order.push(3); });
+      router.use(() => {
+        order.push(1);
+      });
+      router.use(() => {
+        order.push(2);
+      });
+      router.use(() => {
+        order.push(3);
+      });
       router.get('/test', () => json({ ok: true }));
 
       const request = new Request('http://localhost/test');
@@ -233,7 +236,9 @@ describe('Router', () => {
     it('should give middleware the stripped path', async () => {
       const r = new Router('/api');
       let capturedPath;
-      r.use((request, env, ctx, path) => { capturedPath = path; });
+      r.use((request, env, ctx, path) => {
+        capturedPath = path;
+      });
       r.get('/test', () => json({ ok: true }));
 
       const request = new Request('http://localhost/api/test');

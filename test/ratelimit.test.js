@@ -240,9 +240,7 @@ describe('createRateLimiter', () => {
 
   it('does not apply any rule for unmatched paths', async () => {
     const kv = createFakeKv();
-    const onlyLoginRule = [
-      { name: 'login', methods: ['POST'], match: pathPrefix('/login'), limit: 1, windowSec: 60 }
-    ];
+    const onlyLoginRule = [{ name: 'login', methods: ['POST'], match: pathPrefix('/login'), limit: 1, windowSec: 60 }];
     const middleware = createRateLimiter({ binding: 'RATE_LIMIT', rules: onlyLoginRule });
     const request = new Request('http://localhost/other', { method: 'POST' });
     const result = await middleware(request, { RATE_LIMIT: kv }, {}, '/other');
@@ -254,16 +252,19 @@ describe('createRateLimiter integration with Router', () => {
   it('is wired via Router.use() and blocks matching requests', async () => {
     const kv = createFakeKv();
     const router = new Router();
-    router.use(createRateLimiter({
-      binding: 'RATE_LIMIT',
-      rules: [{ name: 'api', match: pathPrefix('/api'), limit: 1, windowSec: 60 }]
-    }));
+    router.use(
+      createRateLimiter({
+        binding: 'RATE_LIMIT',
+        rules: [{ name: 'api', match: pathPrefix('/api'), limit: 1, windowSec: 60 }]
+      })
+    );
     router.get('/api/items', () => json({ items: [] }));
 
     const env = { RATE_LIMIT: kv };
-    const makeRequest = () => new Request('http://localhost/api/items', {
-      headers: { 'CF-Connecting-IP': '5.5.5.5' }
-    });
+    const makeRequest = () =>
+      new Request('http://localhost/api/items', {
+        headers: { 'CF-Connecting-IP': '5.5.5.5' }
+      });
 
     const first = await router.handle(makeRequest(), env, {});
     expect(first.status).toBe(200);

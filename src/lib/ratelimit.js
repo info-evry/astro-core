@@ -147,15 +147,11 @@ export function createRateLimiter({ binding = 'RATE_LIMIT', rules, prefix = 'rl'
 
     if (!result.allowed) {
       const retryAfter = Math.max(0, Math.ceil((result.resetAt - Date.now()) / 1000));
-      return json(
-        { error: 'Too many requests', code: 'too_many_requests' },
-        429,
-        {
-          'Retry-After': String(retryAfter),
-          'X-RateLimit-Limit': String(rule.limit),
-          'X-RateLimit-Remaining': String(result.remaining)
-        }
-      );
+      return json({ error: 'Too many requests', code: 'too_many_requests' }, 429, {
+        'Retry-After': String(retryAfter),
+        'X-RateLimit-Limit': String(rule.limit),
+        'X-RateLimit-Remaining': String(result.remaining)
+      });
     }
   };
 }

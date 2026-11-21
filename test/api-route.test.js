@@ -37,7 +37,9 @@ describe('CORS origin selection', () => {
 
   it('echoes an allowed Origin', async () => {
     const { route } = setup(ok);
-    const response = await call(route, 'http://localhost:4321/site/api/ping', { headers: { Origin: 'http://localhost:4321' } });
+    const response = await call(route, 'http://localhost:4321/site/api/ping', {
+      headers: { Origin: 'http://localhost:4321' }
+    });
     expect(acao(response)).toBe('http://localhost:4321');
   });
 
@@ -49,7 +51,12 @@ describe('CORS origin selection', () => {
 
   it('never reflects an unknown origin: falls back to the first allowed one', async () => {
     const { route } = setup(ok);
-    for (const origin of ['https://evil.test', 'null', 'https://asso.info-evry.fr.evil.test', 'HTTPS://ASSO.INFO-EVRY.FR']) {
+    for (const origin of [
+      'https://evil.test',
+      'null',
+      'https://asso.info-evry.fr.evil.test',
+      'HTTPS://ASSO.INFO-EVRY.FR'
+    ]) {
       const response = await call(route, 'https://asso.info-evry.fr/site/api/ping', { headers: { Origin: origin } });
       expect(acao(response)).toBe(ALLOWED[0]);
     }
@@ -79,7 +86,8 @@ describe('preflight', () => {
     const handle = vi.fn();
     const route = createApiRoute({ router: { handle }, allowedOrigins: ALLOWED });
     const response = await call(route, 'https://asso.info-evry.fr/site/api/x', {
-      method: 'OPTIONS', headers: { Origin: 'http://localhost:4321' }
+      method: 'OPTIONS',
+      headers: { Origin: 'http://localhost:4321' }
     });
     expect(response.status).toBe(204);
     expect(acao(response)).toBe('http://localhost:4321');
@@ -90,7 +98,10 @@ describe('preflight', () => {
 
   it('answers the preflight of an unknown origin with the first allowed origin', async () => {
     const { route } = setup();
-    const response = await call(route, 'https://x.test/site/api/x', { method: 'OPTIONS', headers: { Origin: 'https://evil.test' } });
+    const response = await call(route, 'https://x.test/site/api/x', {
+      method: 'OPTIONS',
+      headers: { Origin: 'https://evil.test' }
+    });
     expect(response.status).toBe(204);
     expect(acao(response)).toBe(ALLOWED[0]);
   });
@@ -99,7 +110,9 @@ describe('preflight', () => {
 describe('CORS on router-generated and error responses', () => {
   it('adds CORS headers to the router 404', async () => {
     const { route } = setup();
-    const response = await call(route, 'http://localhost:4321/site/api/missing', { headers: { Origin: 'http://localhost:4321' } });
+    const response = await call(route, 'http://localhost:4321/site/api/missing', {
+      headers: { Origin: 'http://localhost:4321' }
+    });
     expect(response.status).toBe(404);
     expect(acao(response)).toBe('http://localhost:4321');
     expect(await response.json()).toEqual({ error: 'Ressource introuvable', code: 'not_found' });
@@ -109,7 +122,9 @@ describe('CORS on router-generated and error responses', () => {
     const router = new Router('/site', { maxBodySize: 10 });
     const route = createApiRoute({ router, allowedOrigins: ALLOWED });
     const response = await call(route, 'https://asso.info-evry.fr/site/api/x', {
-      method: 'POST', body: 'x'.repeat(50), headers: { 'Content-Length': '50' }
+      method: 'POST',
+      body: 'x'.repeat(50),
+      headers: { 'Content-Length': '50' }
     });
     expect(response.status).toBe(413);
     expect(acao(response)).toBe('https://asso.info-evry.fr');
@@ -117,7 +132,11 @@ describe('CORS on router-generated and error responses', () => {
 
   it('adds CORS headers to the router 500 without leaking the message', async () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const { route } = setup((router) => router.get('/api/boom', () => { throw new Error('db password leaked'); }));
+    const { route } = setup((router) =>
+      router.get('/api/boom', () => {
+        throw new Error('db password leaked');
+      })
+    );
     const response = await call(route, 'https://asso.info-evry.fr/site/api/boom');
     spy.mockRestore();
     const text = await response.text();
@@ -162,11 +181,43 @@ describe('CORS on router-generated and error responses', () => {
 
 describe('never throws', () => {
   it.each([
-    ['router.handle throws', { router: { handle: async () => { throw new Error('secret'); } } }],
-    ['router.handle throws synchronously', { router: { handle: () => { throw new Error('secret'); } } }],
+    [
+      'router.handle throws',
+      {
+        router: {
+          handle: async () => {
+            throw new Error('secret');
+          }
+        }
+      }
+    ],
+    [
+      'router.handle throws synchronously',
+      {
+        router: {
+          handle: () => {
+            throw new Error('secret');
+          }
+        }
+      }
+    ],
     ['router returns a non-Response', { router: { handle: async () => 42 } }],
-    ['getEnv throws', { getEnv: () => { throw new Error('secret'); } }],
-    ['getCtx throws', { getCtx: () => { throw new Error('secret'); } }]
+    [
+      'getEnv throws',
+      {
+        getEnv: () => {
+          throw new Error('secret');
+        }
+      }
+    ],
+    [
+      'getCtx throws',
+      {
+        getCtx: () => {
+          throw new Error('secret');
+        }
+      }
+    ]
   ])('turns "%s" into a CORS-enabled generic 500', async (_name, overrides) => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const route = createApiRoute({ router: new Router(), allowedOrigins: ALLOWED, ...overrides });
@@ -195,7 +246,8 @@ describe('getEnv / getCtx', () => {
   it('default to locals.runtime.env and locals.cfContext', async () => {
     const { route } = setup(probe);
     const response = await call(route, 'https://asso.info-evry.fr/site/api/env', undefined, {
-      runtime: { env: { A: 1 } }, cfContext: { waitUntil: 'x' }
+      runtime: { env: { A: 1 } },
+      cfContext: { waitUntil: 'x' }
     });
     expect(await response.json()).toEqual({ env: { A: 1 }, ctx: { waitUntil: 'x' } });
   });
@@ -212,7 +264,10 @@ describe('getEnv / getCtx', () => {
     const globalEnv = { DB: 'db' };
     const seen = [];
     const { route } = setup(probe, {
-      getEnv: (locals) => { seen.push(locals); return globalEnv; },
+      getEnv: (locals) => {
+        seen.push(locals);
+        return globalEnv;
+      },
       getCtx: () => ({ ctx: true })
     });
     const locals = { marker: 1 };

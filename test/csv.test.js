@@ -1,6 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import {
-  CSV_BOM, escapeCsvCell, unescapeCsvCell, generateCsv, parseCsv, mapCsvHeaders, csvResponse
+  CSV_BOM,
+  escapeCsvCell,
+  unescapeCsvCell,
+  generateCsv,
+  parseCsv,
+  mapCsvHeaders,
+  csvResponse
 } from '../src/lib/csv.js';
 
 /** True when the (possibly quoted) escaped cell carries the formula guard. */
@@ -56,7 +62,17 @@ describe('escapeCsvCell: quoting', () => {
 
 describe('escapeCsvCell: formula injection', () => {
   it.each([
-    '=SUM(A1:A9)', "=cmd|' /C calc'!A0", '+SUM(1,1)', '-2+3+cmd', '@SUM(A1)', '|calc', '\t=1', '\r=1', '+CMD', '-A1', '=1+1'
+    '=SUM(A1:A9)',
+    "=cmd|' /C calc'!A0",
+    '+SUM(1,1)',
+    '-2+3+cmd',
+    '@SUM(A1)',
+    '|calc',
+    '\t=1',
+    '\r=1',
+    '+CMD',
+    '-A1',
+    '=1+1'
   ])('prefixes %j with a single quote', (value) => {
     expect(isGuarded(escapeCsvCell(value))).toBe(true);
   });
@@ -66,8 +82,19 @@ describe('escapeCsvCell: formula injection', () => {
   });
 
   it.each([
-    '+33612345678', '+33 6 12 34 56 78', '+33 (0)6.12.34.56.78', '(01) 23 45 67 89', '0612345678', '06-12-34-56-78',
-    '+1 555 123-4567', '+33 6 12', '-5', '+5', '42', '3.14', ' +33 6 12'
+    '+33612345678',
+    '+33 6 12 34 56 78',
+    '+33 (0)6.12.34.56.78',
+    '(01) 23 45 67 89',
+    '0612345678',
+    '06-12-34-56-78',
+    '+1 555 123-4567',
+    '+33 6 12',
+    '-5',
+    '+5',
+    '42',
+    '3.14',
+    ' +33 6 12'
   ])('does not prefix the phone number or number %j', (value) => {
     expect(escapeCsvCell(value)).toBe(value);
   });
@@ -77,8 +104,21 @@ describe('escapeCsvCell: formula injection', () => {
   });
 
   it.each([
-    '+', '-', '--', '+-', '++33612345678', '+33+1', '-1+2', '+33612345678x', '+33 6 12 =1', '-(1)+cmd',
-    '\t12', '\r12', '\t+33612345678', '-2e3', '+1,2,3'
+    '+',
+    '-',
+    '--',
+    '+-',
+    '++33612345678',
+    '+33+1',
+    '-1+2',
+    '+33612345678x',
+    '+33 6 12 =1',
+    '-(1)+cmd',
+    '\t12',
+    '\r12',
+    '\t+33612345678',
+    '-2e3',
+    '+1,2,3'
   ])('still prefixes the non-phone %j', (value) => {
     expect(isGuarded(escapeCsvCell(value))).toBe(true);
   });
@@ -101,7 +141,20 @@ describe('unescapeCsvCell', () => {
   });
 
   it('leaves everything else alone', () => {
-    for (const value of ['', 'plain', "'quoted text", "it's", "'", "''x", '+33612345678', '=1', 'a', 12, null, undefined]) {
+    for (const value of [
+      '',
+      'plain',
+      "'quoted text",
+      "it's",
+      "'",
+      "''x",
+      '+33612345678',
+      '=1',
+      'a',
+      12,
+      null,
+      undefined
+    ]) {
       expect(unescapeCsvCell(value)).toBe(value);
     }
   });
@@ -112,8 +165,30 @@ describe('unescapeCsvCell', () => {
 
   it('is the exact inverse of the guard for any string (cell level)', () => {
     const samples = [
-      '', 'x', '=1', '+33612345678', '-5', "'=1", "''=1", "'+33612345678", "'-5", "'x", "'", '|', "'|a", '\t=x', '\r',
-      '@a', '+', '-', '--1', '(01) 23', "'(01) 23", 'é=€', '=', "'="
+      '',
+      'x',
+      '=1',
+      '+33612345678',
+      '-5',
+      "'=1",
+      "''=1",
+      "'+33612345678",
+      "'-5",
+      "'x",
+      "'",
+      '|',
+      "'|a",
+      '\t=x',
+      '\r',
+      '@a',
+      '+',
+      '-',
+      '--1',
+      '(01) 23',
+      "'(01) 23",
+      'é=€',
+      '=',
+      "'="
     ];
     for (const sample of samples) {
       const escaped = escapeCsvCell(sample);
@@ -142,7 +217,12 @@ describe('guard exactness', () => {
 
 describe('generateCsv', () => {
   it('writes array rows without a header by default, CRLF-separated, no trailing eol', () => {
-    expect(generateCsv([[1, 'a'], [2, 'b']])).toBe('1,a\r\n2,b');
+    expect(
+      generateCsv([
+        [1, 'a'],
+        [2, 'b']
+      ])
+    ).toBe('1,a\r\n2,b');
   });
 
   it('derives the header from the first object row when there are no columns', () => {
@@ -179,13 +259,20 @@ describe('generateCsv', () => {
   });
 
   it('ignores inherited properties and non-object rows', () => {
-    expect(generateCsv([{ a: 1 }, null, 'str'], { columns: ['a', 'toString', 'constructor'] }))
-      .toBe('a,toString,constructor\r\n1,,\r\n,,\r\n,,');
+    expect(generateCsv([{ a: 1 }, null, 'str'], { columns: ['a', 'toString', 'constructor'] })).toBe(
+      'a,toString,constructor\r\n1,,\r\n,,\r\n,,'
+    );
     expect(generateCsv([[1], null])).toBe('1\r\n');
   });
 
   it('supports delimiter, bom, quoteAll and eol', () => {
-    const csv = generateCsv([['a;b', 'c']], { columns: ['x', 'y'], delimiter: ';', bom: true, quoteAll: true, eol: '\n' });
+    const csv = generateCsv([['a;b', 'c']], {
+      columns: ['x', 'y'],
+      delimiter: ';',
+      bom: true,
+      quoteAll: true,
+      eol: '\n'
+    });
     expect(csv).toBe(`${CSV_BOM}"x";"y"\n"a;b";"c"`);
     expect(csv.codePointAt(0)).toBe(0xfe_ff);
   });
@@ -208,7 +295,14 @@ describe('generateCsv', () => {
 
 describe('parseCsv', () => {
   it('parses headers and rows', () => {
-    expect(parseCsv('a,b\n1,2\n3,4')).toEqual({ headers: ['a', 'b'], rows: [['1', '2'], ['3', '4']], delimiter: ',' });
+    expect(parseCsv('a,b\n1,2\n3,4')).toEqual({
+      headers: ['a', 'b'],
+      rows: [
+        ['1', '2'],
+        ['3', '4']
+      ],
+      delimiter: ','
+    });
   });
 
   it('strips a BOM', () => {
@@ -217,13 +311,19 @@ describe('parseCsv', () => {
 
   it('handles LF, CRLF and CR line endings', () => {
     for (const eol of ['\n', '\r\n', '\r']) {
-      expect(parseCsv(`a,b${eol}1,2${eol}3,4${eol}`).rows).toEqual([['1', '2'], ['3', '4']]);
+      expect(parseCsv(`a,b${eol}1,2${eol}3,4${eol}`).rows).toEqual([
+        ['1', '2'],
+        ['3', '4']
+      ]);
     }
   });
 
   it('handles quoted cells with delimiters, newlines, CRLF and escaped quotes', () => {
     const { rows } = parseCsv('a,b\r\n"x, y","line1\nline2"\r\n"say ""hi""","c\r\nd"');
-    expect(rows).toEqual([['x, y', 'line1\nline2'], ['say "hi"', 'c\r\nd']]);
+    expect(rows).toEqual([
+      ['x, y', 'line1\nline2'],
+      ['say "hi"', 'c\r\nd']
+    ]);
   });
 
   it('auto-detects ; and tab delimiters from the header line', () => {
@@ -254,7 +354,10 @@ describe('parseCsv', () => {
   });
 
   it('drops blank lines and all-empty rows', () => {
-    expect(parseCsv('a,b\n\n1,2\n   \n,\n3,4\n\n').rows).toEqual([['1', '2'], ['3', '4']]);
+    expect(parseCsv('a,b\n\n1,2\n   \n,\n3,4\n\n').rows).toEqual([
+      ['1', '2'],
+      ['3', '4']
+    ]);
   });
 
   it('trims cells, quoted ones included', () => {
@@ -262,7 +365,10 @@ describe('parseCsv', () => {
   });
 
   it('keeps a stray quote inside unquoted text literally', () => {
-    expect(parseCsv('a,b\n5" tall,x\n2,3').rows).toEqual([['5" tall', 'x'], ['2', '3']]);
+    expect(parseCsv('a,b\n5" tall,x\n2,3').rows).toEqual([
+      ['5" tall', 'x'],
+      ['2', '3']
+    ]);
   });
 
   it('runs an unterminated quote to the end of the input', () => {
@@ -286,10 +392,32 @@ describe('parseCsv', () => {
 
 describe('CSV round trips', () => {
   const tricky = [
-    'plain', 'with space inside', 'comma, inside', 'semi; inside', 'tab\tinside', 'quote " inside', '""', '"',
-    'multi\nline', 'crlf\r\nline', 'lone\rcr', 'trailing,', ',leading', 'émoji 🎓 ünï', '+33612345678',
-    '+33 6 12 34 56 78', '=1+1', '=HYPERLINK("http://evil","x")', '@SUM(A1)', '-2+3', '|calc', "'=1",
-    "'+33612345678", "it's", "'", '5" tall'
+    'plain',
+    'with space inside',
+    'comma, inside',
+    'semi; inside',
+    'tab\tinside',
+    'quote " inside',
+    '""',
+    '"',
+    'multi\nline',
+    'crlf\r\nline',
+    'lone\rcr',
+    'trailing,',
+    ',leading',
+    'émoji 🎓 ünï',
+    '+33612345678',
+    '+33 6 12 34 56 78',
+    '=1+1',
+    '=HYPERLINK("http://evil","x")',
+    '@SUM(A1)',
+    '-2+3',
+    '|calc',
+    "'=1",
+    "'+33612345678",
+    "it's",
+    "'",
+    '5" tall'
   ];
 
   for (const delimiter of [',', ';', '\t']) {
@@ -325,7 +453,11 @@ describe('mapCsvHeaders', () => {
   const aliases = { firstName: ['prénom', 'firstname'], email: ['email', 'mail'], phone: ['téléphone', 'tel'] };
 
   it('maps field names to column indexes, case- and space-insensitively', () => {
-    expect(mapCsvHeaders([' Prénom ', 'MAIL', 'Inconnu', 'Tel'], aliases)).toEqual({ firstName: 0, email: 1, phone: 3 });
+    expect(mapCsvHeaders([' Prénom ', 'MAIL', 'Inconnu', 'Tel'], aliases)).toEqual({
+      firstName: 0,
+      email: 1,
+      phone: 3
+    });
   });
 
   it('lets the last matching column win and tolerates non-string headers', () => {
@@ -371,7 +503,7 @@ describe('csvResponse', () => {
 
   it('gives non-ASCII names an ASCII fallback plus filename*', () => {
     expect(disposition("Étudiants d'été 100%.csv")).toBe(
-      'attachment; filename="_tudiants d\'_t_ 100_.csv"; filename*=UTF-8\'\'%C3%89tudiants%20d%27%C3%A9t%C3%A9%20100%25.csv'
+      "attachment; filename=\"_tudiants d'_t_ 100_.csv\"; filename*=UTF-8''%C3%89tudiants%20d%27%C3%A9t%C3%A9%20100%25.csv"
     );
     expect(() => csvResponse('x', '€ 🎓.csv')).not.toThrow();
     expect(disposition('(a)*.csv')).toBe('attachment; filename="(a)*.csv"');

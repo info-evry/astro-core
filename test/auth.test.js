@@ -1,13 +1,22 @@
 import { describe, it, expect, vi } from 'vitest';
 import { Router, json } from '../src/lib/router.js';
 import {
-  timingSafeEqual, timingSafeEqualAsync, extractBearer, verifyAdminToken, adminOnly, createAdminGuard
+  timingSafeEqual,
+  timingSafeEqualAsync,
+  extractBearer,
+  verifyAdminToken,
+  adminOnly,
+  createAdminGuard
 } from '../src/lib/auth.js';
 
 const req = (authorization, url = 'http://localhost/api/admin/members') =>
   new Request(url, { headers: authorization === undefined ? {} : { Authorization: authorization } });
 const kvWith = (value) => ({ get: vi.fn(async () => value) });
-const failingKv = () => ({ get: vi.fn(async () => { throw new Error('KV down'); }) });
+const failingKv = () => ({
+  get: vi.fn(async () => {
+    throw new Error('KV down');
+  })
+});
 
 describe.each([
   ['timingSafeEqual', async (a, b) => timingSafeEqual(a, b)],

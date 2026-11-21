@@ -11,14 +11,24 @@ describe('parsePositiveId', () => {
     expect(parsePositiveId(String(Number.MAX_SAFE_INTEGER))).toBe(Number.MAX_SAFE_INTEGER);
   });
 
-  it.each([
-    '12abc', '3.5', '0', '-1', '', ' ', ' 7', '7 ', '1e3', '+5', '0x10', '1_000', '٣', '１２', '12\n'
-  ])('rejects the string %j', (value) => {
-    expect(parsePositiveId(value)).toBeNull();
-  });
+  it.each(['12abc', '3.5', '0', '-1', '', ' ', ' 7', '7 ', '1e3', '+5', '0x10', '1_000', '٣', '１２', '12\n'])(
+    'rejects the string %j',
+    (value) => {
+      expect(parsePositiveId(value)).toBeNull();
+    }
+  );
 
   it.each([
-    [0], [-0], [-1], [3.5], [Number.NaN], [Infinity], [-Infinity], [1e21], [Number.MAX_SAFE_INTEGER + 1], [2 ** 53]
+    [0],
+    [-0],
+    [-1],
+    [3.5],
+    [Number.NaN],
+    [Infinity],
+    [-Infinity],
+    [1e21],
+    [Number.MAX_SAFE_INTEGER + 1],
+    [2 ** 53]
   ])('rejects the number %s', (value) => {
     expect(parsePositiveId(value)).toBeNull();
   });
@@ -30,8 +40,22 @@ describe('parsePositiveId', () => {
 
   it('rejects non-number, non-string types', () => {
     const toStringBomb = { toString: () => '5', valueOf: () => 5 };
-    // eslint-disable-next-line sonarjs/no-primitive-wrappers, unicorn/new-for-builtins -- a boxed Number is one of the inputs under test
-    for (const value of [null, undefined, true, false, [], [5], ['5'], {}, toStringBomb, 5n, Symbol('x'), () => 5, new Number(5)]) {
+    for (const value of [
+      null,
+      undefined,
+      true,
+      false,
+      [],
+      [5],
+      ['5'],
+      {},
+      toStringBomb,
+      5n,
+      Symbol('x'),
+      () => 5,
+      // eslint-disable-next-line sonarjs/no-primitive-wrappers, unicorn/new-for-builtins -- a boxed Number is one of the inputs under test
+      new Number(5)
+    ]) {
       expect(parsePositiveId(value)).toBeNull();
     }
   });
@@ -80,6 +104,11 @@ describe('parseIdList', () => {
   });
 
   it('reports errors in the documented precedence', () => {
-    expect(parseIdList(Array.from({ length: 5 }, () => 'x'), { max: 2 })).toEqual({ error: 'too_many' });
+    expect(
+      parseIdList(
+        Array.from({ length: 5 }, () => 'x'),
+        { max: 2 }
+      )
+    ).toEqual({ error: 'too_many' });
   });
 });
