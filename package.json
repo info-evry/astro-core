@@ -7,7 +7,6 @@
     "./router": "./src/lib/router.js",
     "./ratelimit": "./src/lib/ratelimit.js",
     "./validation": "./src/lib/validation.js",
-    "./formatting": "./src/lib/formatting.js",
     "./request": "./src/lib/request.js",
     "./ids": "./src/lib/ids.js",
     "./d1": "./src/lib/d1.js",

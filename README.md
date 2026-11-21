@@ -136,7 +136,7 @@ and a warning is logged.
 ## Shared server layer
 
 Plain ESM + JSDoc, Web APIs only (no `node:*`, no DOM), usable on Cloudflare Workers. Every module is
-exported through `package.json`: `astro-core/{router,ratelimit,validation,formatting,http,request,ids,d1,auth,csv,settings,api-route}`.
+exported through `package.json`: `astro-core/{router,ratelimit,validation,http,request,ids,d1,auth,csv,settings,api-route}`.
 
 ### Error contract
 
@@ -301,13 +301,12 @@ handlers never throw: any failure (router, `getEnv`, `getCtx`, a non-`Response` 
 standard admin rule. `pathPrefix` now matches on a path-segment boundary: `pathPrefix('/api/register')` matches
 `/api/register` and `/api/register/x` but not `/api/registerX`; a prefix ending in `/` matches only below it.
 
-### `astro-core/validation` and `astro-core/formatting` additions
+### `astro-core/validation` additions
 
 `LIMITS` (`name 100`, `email 254`, `phone 30`, `handle 64`, `studentId 32`, `teamName 128`, `description 256`,
 `teamPassword 64`, `text 1000`) and `isTooLong(value, max)` (true only for strings longer than `max`).
-`escapeHtml` escapes `& < > " '` (apostrophe as `&#39;`) and `formatCurrency` returns `'0,00 €'` for NaN,
-infinite and non-numeric input. These are the canonical implementations: astro-design and the sites
-re-export them instead of keeping copies.
+HTML escaping and date/price formatting are browser concerns: they live in
+`@info-evry/astro-design/scripts/dom` (`escapeHtml`, `formatDate`, `formatCurrency`).
 
 ## API Reference
 

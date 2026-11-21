@@ -9,7 +9,7 @@ Astro Core is a shared JavaScript utilities library for Cloudflare Workers, used
 ```
 astro-core/
 ├── src/lib/
-│   ├── router.js ratelimit.js validation.js formatting.js   # original modules
+│   ├── router.js ratelimit.js validation.js   # original modules
 │   ├── http.js request.js ids.js d1.js auth.js csv.js        # shared server layer
 │   ├── settings.js api-route.js
 │   └── errors.js        # internal error catalogue (not exported)
