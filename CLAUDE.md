@@ -2,7 +2,7 @@
 
 ## Overview
 
-Astro Core is a shared JavaScript utilities library for Cloudflare Workers, used by astro-ndi and astro-join.
+Astro Core is a shared JavaScript utilities library for Cloudflare Workers, used by astro-ndi and astro-join (read `../../AGENTS.md` for the workspace rules).
 
 ## Project Structure
 
