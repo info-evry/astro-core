@@ -58,7 +58,7 @@ describe('sanitizeString', () => {
 
   it('uses default max length of 256', () => {
     const longString = 'a'.repeat(300);
-    expect(sanitizeString(longString).length).toBe(256);
+    expect(sanitizeString(longString)).toHaveLength(256);
   });
 });
 
@@ -156,7 +156,7 @@ describe('clampString', () => {
 
   it('uses default max length of 256', () => {
     const longString = 'a'.repeat(300);
-    expect(clampString(longString).length).toBe(256);
+    expect(clampString(longString)).toHaveLength(256);
   });
 });
 

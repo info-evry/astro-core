@@ -28,7 +28,7 @@ describe('Router', () => {
     it('should add a route', () => {
       const handler = () => {};
       router.add('GET', '/test', handler);
-      expect(router.routes.length).toBe(1);
+      expect(router.routes).toHaveLength(1);
       expect(router.routes[0].method).toBe('GET');
     });
 

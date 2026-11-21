@@ -43,7 +43,7 @@ describe('truncateText', () => {
 
   it('uses default max length of 40', () => {
     const longString = 'a'.repeat(50);
-    expect(truncateText(longString).length).toBe(40);
+    expect(truncateText(longString)).toHaveLength(40);
   });
 });
 
